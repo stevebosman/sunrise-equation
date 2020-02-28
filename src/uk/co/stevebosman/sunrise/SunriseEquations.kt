@@ -1,18 +1,11 @@
 package uk.co.stevebosman.sunrise
 
 import uk.co.stevebosman.angles.*
-import uk.co.stevebosman.angles.uk.co.stevebosman.angles.cos
-import uk.co.stevebosman.angles.uk.co.stevebosman.angles.radToDeg
-import uk.co.stevebosman.angles.uk.co.stevebosman.angles.sin
-import uk.co.stevebosman.angles.uk.co.stevebosman.angles.times
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.temporal.ChronoUnit
-import kotlin.math.acos
-import kotlin.math.asin
-import kotlin.math.tan
 
 val J2000_EPOCH_DATE:ZonedDateTime = ZonedDateTime.of(
     LocalDate.of(2000, 1, 1),
@@ -202,7 +195,7 @@ fun calculateSunDeclination(t: Double): Angle {
     val lambda = calculateSunApparentLongitude(t)
 
     val sint = sin(e) * sin(lambda)
-    return Angle.fromRadians(asin(sint))
+    return asin(sint)
 }
 
 /**
@@ -216,7 +209,7 @@ fun calculateEquationOfTime(t: Double): Double {
     val e = calculateEccentricityEarthOrbit(t)
     val m = calculateGeometricMeanAnomalySun(t)
 
-    var y = tan(epsilon.radians / 2.0)
+    var y = tan(epsilon / 2.0)
     y *= y
 
     val sin2l0 = sin(2.0 * l0)
@@ -236,8 +229,7 @@ fun calculateEquationOfTime(t: Double): Double {
  * @return Hour Angle
  */
 fun calculateHourAngleSunrise(latitude: Angle, solarDeclination: Angle): Angle {
-    val hourAngleArg = (cos(SolarZenithAtSunRiseSunSet) / (cos(latitude) * cos(solarDeclination)) - uk.co.stevebosman.angles.uk.co.stevebosman.angles.tan(latitude) * uk.co.stevebosman.angles.uk.co.stevebosman.angles.tan(solarDeclination))
-    val hourAngle = acos(hourAngleArg)
-    return Angle.fromRadians(hourAngle)
+    val hourAngleArg = (cos(SolarZenithAtSunRiseSunSet) / (cos(latitude) * cos(solarDeclination)) - tan(latitude) * tan(solarDeclination))
+    return acos(hourAngleArg)
 }
 
