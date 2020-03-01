@@ -95,14 +95,8 @@ fun calculateTimeJulianCentury(jd: Double): Double {
  * @return Geometric mean longitude of the sun.
  */
 fun calculateGeometricMeanLongitudeSun(t: Double): Angle {
-    var l0 = 280.46646 + t * (36000.76983 + t * (0.0003032))
-    while (l0 > 360.0) {
-        l0 -= 360.0
-    }
-    while (l0 < 0.0) {
-        l0 += 360.0
-    }
-    return Angle.fromDegrees(l0)
+    val l0 = 280.46646 + t * (36000.76983 + t * (0.0003032))
+    return Angle.fromDegrees(l0).simplify()
 }
 
 /**
