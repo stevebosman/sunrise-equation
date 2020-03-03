@@ -1,0 +1,4 @@
+rootProject.name = 'sunrise-equation'
+
+
+enableFeaturePreview('GRADLE_METADATA')
