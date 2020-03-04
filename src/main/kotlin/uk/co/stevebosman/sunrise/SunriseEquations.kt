@@ -213,7 +213,7 @@ fun calculateEquationOfTime(t: Double): Double {
     val sin2m = sin(2.0 * m)
 
     val eTime = y * sin2l0 - 2.0 * e * sinm + 4.0 * e * y * sinm * cos2l0 - 0.5 * y * y * sin4l0 - 1.25 * e * e * sin2m
-    return radToDeg(eTime) * 4.0
+    return radiansToDegrees(eTime) * 4.0
 }
 
 /**
