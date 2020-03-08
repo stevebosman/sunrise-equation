@@ -12,19 +12,21 @@ val J2000_EPOCH_DATE:ZonedDateTime = ZonedDateTime.of(
     LocalTime.of(12, 0),
     ZoneId.of("UTC")
 )
-const val J2000_EPOCH = 2451545.0
+const val J2000_EPOCH = 2451545
 const val DAYS_PER_CENTURY = 36525.0
 /**
  * Used to take into account refraction
  */
 val SolarZenithAtSunRiseSunSet = Angle.fromDegrees(90, 50.0)
-private const val TT_OFFSET = 0.0008
-
 private const val MINUTES_PER_DAY = 24.0 * 60.0
+
 private const val SECONDS_PER_DAY = 24 * 60 * 60
 private const val MILLISECONDS_PER_DAY = SECONDS_PER_DAY * 1000.0
+private const val TT_OFFSET = 69.184/(SECONDS_PER_DAY)
 
 /**
+ * The Julian date (JD) of any instant is the Julian day number for the preceding noon in Universal Time
+ * plus the fraction of the day since that instant.
  * Calculate the continuous count of days since the beginning of the Julian Period, see https://en.wikipedia.org/wiki/Julian_day
  * @param dateTime
  * @return continuous count of days since the beginning of the Julian Period
