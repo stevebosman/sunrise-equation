@@ -20,7 +20,8 @@ repositories {
 dependencies {
     implementation(
             'org.jetbrains.kotlin:kotlin-stdlib:1.3.31',
-            'uk.co.stevebosman:angles:0.0.5'
+            'uk.co.stevebosman:angles:0.0.6',
+            'uk.co.stevebosman:is-close:0.0.4'
     )
     testImplementation(
             'org.assertj:assertj-core:3.12.2',
