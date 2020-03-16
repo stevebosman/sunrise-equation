@@ -9,11 +9,12 @@ import java.time.ZonedDateTime
 
 internal class CalculateJulianMidnightDateTest {
     private val JDATE_BASE_1_JAN_2000_MIDNIGHT = 2451544.5
+    private val JDATE_BASE_1_JAN_2000_MIDDAY = 2451545.0
 
     @Test
-    fun whenMidday1Jan2000ReturnsBasePlus0() {
+    fun whenMiddayLondon1Jan2000ReturnsBasePlus0() {
         val actual =
-            calculateJulianMidnightDate(
+            calculateJulianDate(
                 ZonedDateTime.of(
                     LocalDate.of(2000, 1, 1),
                     LocalTime.of(12, 0),
@@ -24,9 +25,9 @@ internal class CalculateJulianMidnightDateTest {
     }
 
     @Test
-    fun whenMidnight2Jan2000ReturnsBasePlusOne() {
+    fun whenMidnightLondon2Jan2000ReturnsBasePlusOne() {
         val actual =
-            calculateJulianMidnightDate(
+            calculateJulianDate(
                 ZonedDateTime.of(
                     LocalDate.of(2000, 1, 2),
                     LocalTime.of(0, 0),
@@ -37,9 +38,9 @@ internal class CalculateJulianMidnightDateTest {
     }
 
     @Test
-    fun whenMidday2Jan2000ReturnsBasePlusOne() {
+    fun whenMiddayLondon2Jan2000ReturnsMidnightBasePlusOne() {
         val actual =
-            calculateJulianMidnightDate(
+            calculateJulianDate(
                 ZonedDateTime.of(
                     LocalDate.of(2000, 1, 2),
                     LocalTime.of(12, 0),
@@ -50,9 +51,23 @@ internal class CalculateJulianMidnightDateTest {
     }
 
     @Test
-    fun whenMiddayNewYork2Jan2000ReturnsBasePlusOne() {
+    fun whenMiddayLondon2Jan2000WithTimeReturnsMiddayBasePlusOne() {
         val actual =
-            calculateJulianMidnightDate(
+            calculateJulianDate(
+                ZonedDateTime.of(
+                    LocalDate.of(2000, 1, 2),
+                    LocalTime.of(12, 0),
+                    ZoneId.of("Europe/London")
+                ),
+                true
+            )
+        assertEquals(JDATE_BASE_1_JAN_2000_MIDDAY + 1, actual)
+    }
+
+    @Test
+    fun whenMiddayChicago2Jan2000ReturnsBasePlusOne() {
+        val actual =
+            calculateJulianDate(
                 ZonedDateTime.of(
                     LocalDate.of(2000, 1, 2),
                     LocalTime.of(12, 0),
@@ -60,5 +75,18 @@ internal class CalculateJulianMidnightDateTest {
                 )
             )
         assertEquals(JDATE_BASE_1_JAN_2000_MIDNIGHT + 1, actual)
+    }
+
+    @Test
+    fun whenMiddayChicago2Jan2000WithTimeReturnsBasePlusOne() {
+        val actual =
+            calculateJulianDate(
+                ZonedDateTime.of(
+                    LocalDate.of(2000, 1, 2),
+                    LocalTime.of(12, 0),
+                    ZoneId.of("America/Chicago")
+                ), true
+            )
+        assertEquals(JDATE_BASE_1_JAN_2000_MIDDAY + 30.0/24, actual)
     }
 }
