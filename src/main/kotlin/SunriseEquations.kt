@@ -39,9 +39,10 @@ val SolarZenithAtSunRiseSunSet = Angle.fromDegrees(90, 50.0)
  * @return continuous count of days since the beginning of the Julian Period
  */
 fun calculateJulianDate(dateTime: ZonedDateTime, includeTime: Boolean = false): Double {
+    val utcDateTime = dateTime.withZoneSameInstant(ZoneId.of("UTC"))
     val days =
-        ChronoUnit.DAYS.between(J2000_EPOCH_DATE.truncatedTo(ChronoUnit.DAYS), dateTime.truncatedTo(ChronoUnit.DAYS))
-    val adjustedDay = dateTime.withYear(2000).withDayOfYear(1)
+        ChronoUnit.DAYS.between(J2000_EPOCH_DATE.truncatedTo(ChronoUnit.DAYS), utcDateTime.truncatedTo(ChronoUnit.DAYS))
+    val adjustedDay = utcDateTime.withYear(2000).withDayOfYear(1)
     return J2000_EPOCH_NOON + days + if (includeTime) (ChronoUnit.MILLIS.between(
         J2000_EPOCH_DATE,
         adjustedDay
@@ -323,7 +324,9 @@ fun calculateSolarNoonTime(
     longitude: Angle
 ): ZonedDateTime {
     val jday = calculateJulianDate(date, false)
+    println("jday: $jday")
     val midnightUtc: ZonedDateTime = date.withZoneSameInstant(ZoneId.of("UTC")).truncatedTo(ChronoUnit.DAYS)
+    println("midnightUtc: $midnightUtc")
     val solNoonTime =
         midnightUtc.plusNanos((SECONDS_PER_MINUTE * 1_000_000_000L * calculateSolarNoon(jday, longitude)).toLong()).withZoneSameInstant(date.zone)
     return solNoonTime.truncatedTo(ChronoUnit.MILLIS)
@@ -347,8 +350,8 @@ fun calculateSolarNoon(julianDate: Double, longitude: Angle): Double {
 
 fun calculateSunriseDetails(date: ZonedDateTime, longitude:Angle, latitude:Angle): SunriseDetails {
     val solarNoonTime = calculateSolarNoonTime(date, longitude)
-    val sunrise = calculateSunriseSetTime(true, solarNoonTime, latitude, longitude)
-    val sunset = calculateSunriseSetTime(false, solarNoonTime, latitude, longitude)
+    val sunrise = calculateSunriseSetTime(true, date, latitude, longitude)
+    val sunset = calculateSunriseSetTime(false, date, latitude, longitude)
     return SunriseDetails(
         sunrise.second,
         solarNoonTime,
