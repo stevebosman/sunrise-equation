@@ -13,10 +13,10 @@ fun main() {
 }
 
 fun calculate(date: ZonedDateTime, longitude:Angle, latitude:Angle) {
-    println("SolNoon: " + calculateSolarNoonTime(date, longitude))
-    val sunrise = calculateSunriseSetTime(true, date, latitude, longitude)
-    println("Sunrise: $sunrise")
-    val sunset = calculateSunriseSetTime(false, date, latitude, longitude)
-    println("Sunset: $sunset")
+    val details = calculateSunriseDetails(date, longitude, latitude)
+    println("Type: ${details.daylightType}")
+    println("SolNoon: ${details.solarNoonTime}")
+    println("Sunrise: ${details.sunrise}")
+    println("Sunset: ${details.sunset}")
 }
 

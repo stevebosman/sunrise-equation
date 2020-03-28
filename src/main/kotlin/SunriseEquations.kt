@@ -56,13 +56,13 @@ fun calculateJulianDate(dateTime: ZonedDateTime, includeTime: Boolean = false): 
  * @param longitude longitude on earth
  * @return Sunrise or sunset time for given day
  */
-fun calculateSunriseSetTime(rise: Boolean, dateTime: ZonedDateTime, latitude: Angle, longitude: Angle): ZonedDateTime {
+fun calculateSunriseSetTime(rise: Boolean, dateTime: ZonedDateTime, latitude: Angle, longitude: Angle): Pair<ZonedDateTime, DaylightType> {
     val julianMidnight = calculateJulianDate(dateTime, false)
     val midnightUtc: ZonedDateTime = dateTime.withZoneSameInstant(ZoneId.of("UTC")).truncatedTo(ChronoUnit.DAYS)
 
     val minutesAfterMidnight = calculateRefinedSunriseSetUTC(rise, julianMidnight, latitude, longitude)
-    val secondsAfterMidnight = SECONDS_PER_MINUTE * minutesAfterMidnight
-    return midnightUtc.plusSeconds(secondsAfterMidnight.toLong()).withZoneSameInstant(dateTime.zone)
+    val secondsAfterMidnight = SECONDS_PER_MINUTE * minutesAfterMidnight.first
+    return Pair(midnightUtc.plusSeconds(secondsAfterMidnight.toLong()).withZoneSameInstant(dateTime.zone), minutesAfterMidnight.second)
 }
 
 /**
@@ -74,7 +74,8 @@ fun calculateSunriseSetTime(rise: Boolean, dateTime: ZonedDateTime, latitude: An
  * @param longitude longitude on earth
  * @return Sunrise or sunset time for given day in minutes since midnight
  */
-fun calculateRefinedSunriseSetUTC(rise: Boolean, julianMidnight: Double, latitude: Angle, longitude: Angle): Double {
+fun calculateRefinedSunriseSetUTC(rise: Boolean, julianMidnight: Double, latitude: Angle, longitude: Angle): Pair<Double,DaylightType> {
+    var daylightType = DaylightType.NORMAL
     var estimate = calculateSunriseSetUTC(rise, julianMidnight, latitude, longitude)
     var i = 0
     if (estimate.isNaN()) {
@@ -83,12 +84,14 @@ fun calculateRefinedSunriseSetUTC(rise: Boolean, julianMidnight: Double, latitud
         if (((latitude.degrees > 66.4) && (doy > 79) && (doy < 267)) ||
             ((latitude.degrees < -66.4) && ((doy < 83) || (doy > 263)))
         ) {   //previous sunrise/next sunset
+            daylightType = DaylightType.MIDNIGHT_SUN
             if (rise) { // find previous sunrise
                 increment = -1
             } else { // find next sunset
                 increment = 1
             }
         } else {   //previous sunset/next sunrise
+            daylightType = DaylightType.POLAR_NIGHT
             if (rise) { // find previous sunrise
                 increment = -1
             } else { // find next sunset
@@ -109,7 +112,7 @@ fun calculateRefinedSunriseSetUTC(rise: Boolean, julianMidnight: Double, latitud
         }
         prevEstimate = estimate
     }
-    return (i * MINUTES_PER_DAY) + estimate
+    return Pair((i * MINUTES_PER_DAY) + estimate, daylightType)
 }
 
 /**
@@ -342,3 +345,14 @@ fun calculateSolarNoon(julianDate: Double, longitude: Angle): Double {
     return estimate
 }
 
+fun calculateSunriseDetails(date: ZonedDateTime, longitude:Angle, latitude:Angle): SunriseDetails {
+    val solarNoonTime = calculateSolarNoonTime(date, longitude)
+    val sunrise = calculateSunriseSetTime(true, solarNoonTime, latitude, longitude)
+    val sunset = calculateSunriseSetTime(false, solarNoonTime, latitude, longitude)
+    return SunriseDetails(
+        sunrise.second,
+        solarNoonTime,
+        sunrise.first,
+        sunset.first
+    )
+}
