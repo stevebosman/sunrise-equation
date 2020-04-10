@@ -57,13 +57,21 @@ fun calculateJulianDate(dateTime: ZonedDateTime, includeTime: Boolean = false): 
  * @param longitude longitude on earth
  * @return Sunrise or sunset time for given day
  */
-fun calculateSunriseSetTime(rise: Boolean, dateTime: ZonedDateTime, latitude: Angle, longitude: Angle): Pair<ZonedDateTime, DaylightType> {
+fun calculateSunriseSetTime(
+    rise: Boolean,
+    dateTime: ZonedDateTime,
+    latitude: Angle,
+    longitude: Angle
+): Pair<ZonedDateTime, DaylightType> {
     val julianMidnight = calculateJulianDate(dateTime, false)
     val midnightUtc: ZonedDateTime = dateTime.withZoneSameInstant(ZoneId.of("UTC")).truncatedTo(ChronoUnit.DAYS)
 
     val minutesAfterMidnight = calculateRefinedSunriseSetUTC(rise, julianMidnight, latitude, longitude)
     val secondsAfterMidnight = SECONDS_PER_MINUTE * minutesAfterMidnight.first
-    return Pair(midnightUtc.plusSeconds(secondsAfterMidnight.toLong()).withZoneSameInstant(dateTime.zone), minutesAfterMidnight.second)
+    return Pair(
+        midnightUtc.plusSeconds(secondsAfterMidnight.toLong()).withZoneSameInstant(dateTime.zone),
+        minutesAfterMidnight.second
+    )
 }
 
 /**
@@ -75,7 +83,12 @@ fun calculateSunriseSetTime(rise: Boolean, dateTime: ZonedDateTime, latitude: An
  * @param longitude longitude on earth
  * @return Sunrise or sunset time for given day in minutes since midnight
  */
-fun calculateRefinedSunriseSetUTC(rise: Boolean, julianMidnight: Double, latitude: Angle, longitude: Angle): Pair<Double,DaylightType> {
+fun calculateRefinedSunriseSetUTC(
+    rise: Boolean,
+    julianMidnight: Double,
+    latitude: Angle,
+    longitude: Angle
+): Pair<Double, DaylightType> {
     var daylightType = DaylightType.NORMAL
     var estimate = calculateSunriseSetUTC(rise, julianMidnight, latitude, longitude)
     var i = 0
@@ -102,7 +115,8 @@ fun calculateRefinedSunriseSetUTC(rise: Boolean, julianMidnight: Double, latitud
         while (estimate.isNaN()) {
             i += increment
             estimate = calculateSunriseSetUTC(rise, julianMidnight + i, latitude, longitude)
-            estimate = calculateSunriseSetUTC(rise, julianMidnight + i + estimate / MINUTES_PER_DAY, latitude, longitude)
+            estimate =
+                calculateSunriseSetUTC(rise, julianMidnight + i + estimate / MINUTES_PER_DAY, latitude, longitude)
         }
     }
     var prevEstimate = estimate
@@ -211,7 +225,8 @@ fun calculateSunEquationOfCenter(centuryTimeJ2000: Double): Angle {
     val sinm = sin(m)
     val sin2m = sin(m + m)
     val sin3m = sin(m + m + m)
-    val c = sinm * (1.914602 - centuryTimeJ2000 * (0.004817 + 0.000014 * centuryTimeJ2000)) + sin2m * (0.019993 - 0.000101 * centuryTimeJ2000) + sin3m * 0.000289
+    val c =
+        sinm * (1.914602 - centuryTimeJ2000 * (0.004817 + 0.000014 * centuryTimeJ2000)) + sin2m * (0.019993 - 0.000101 * centuryTimeJ2000) + sin3m * 0.000289
     return Angle.fromDegrees(c)
 }
 
@@ -328,7 +343,8 @@ fun calculateSolarNoonTime(
     val midnightUtc: ZonedDateTime = date.withZoneSameInstant(ZoneId.of("UTC")).truncatedTo(ChronoUnit.DAYS)
     println("midnightUtc: $midnightUtc")
     val solNoonTime =
-        midnightUtc.plusNanos((SECONDS_PER_MINUTE * 1_000_000_000L * calculateSolarNoon(jday, longitude)).toLong()).withZoneSameInstant(date.zone)
+        midnightUtc.plusNanos((SECONDS_PER_MINUTE * 1_000_000_000L * calculateSolarNoon(jday, longitude)).toLong())
+            .withZoneSameInstant(date.zone)
     return solNoonTime.truncatedTo(ChronoUnit.MILLIS)
 }
 
@@ -344,18 +360,29 @@ fun calculateSolarNoon(julianDate: Double, longitude: Angle): Double {
         val newTime = calculateTimeJulianCentury(julianDate + estimate / MINUTES_PER_DAY)
         eqTime = calculateEquationOfTime(newTime)
         estimate = (MINUTES_PER_DAY / 2) - (longitude.degrees * MINUTES_PER_DEGREE) - eqTime
-    } while (!isClose(estimate, previousEstimate, 1.0/ SECONDS_PER_DAY))
+    } while (!isClose(estimate, previousEstimate, 1.0 / SECONDS_PER_DAY))
     return estimate
 }
 
-fun calculateSunriseDetails(date: ZonedDateTime, longitude:Angle, latitude:Angle): SunriseDetails {
+fun calculateSunriseDetails(date: ZonedDateTime, longitude: Angle, latitude: Angle): SunriseDetails {
     val solarNoonTime = calculateSolarNoonTime(date, longitude)
     val sunrise = calculateSunriseSetTime(true, date, latitude, longitude)
     val sunset = calculateSunriseSetTime(false, date, latitude, longitude)
+    val moonPhase = calculateMoonPhase(
+        if (sunset.second.equals(DaylightType.NORMAL))
+            sunset.first
+        else
+            solarNoonTime.plusHours(12L)
+    )
     return SunriseDetails(
         sunrise.second,
         solarNoonTime,
         sunrise.first,
-        sunset.first
+        sunset.first,
+        moonPhase
     )
+}
+
+fun calculateMoonPhase(date: ZonedDateTime): Double {
+    return (calculateJulianDate(date)- 2451549.5)/ 29.53%1.0
 }
