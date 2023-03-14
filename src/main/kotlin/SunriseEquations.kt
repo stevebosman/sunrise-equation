@@ -1,7 +1,7 @@
 package uk.co.stevebosman.sunrise
 
 import uk.co.stevebosman.angles.*
-import uk.co.stevebosman.close.isClose
+import uk.co.stevebosman.difference.isClose
 import java.time.*
 import java.time.temporal.ChronoUnit
 import kotlin.math.floor
