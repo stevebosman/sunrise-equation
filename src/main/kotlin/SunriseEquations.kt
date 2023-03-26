@@ -339,9 +339,7 @@ fun calculateSolarNoonTime(
     longitude: Angle
 ): ZonedDateTime {
     val jday = calculateJulianDate(date, false)
-    println("jday: $jday")
     val midnightUtc: ZonedDateTime = date.withZoneSameInstant(ZoneId.of("UTC")).truncatedTo(ChronoUnit.DAYS)
-    println("midnightUtc: $midnightUtc")
     val solNoonTime =
         midnightUtc.plusNanos((SECONDS_PER_MINUTE * 1_000_000_000L * calculateSolarNoon(jday, longitude)).toLong())
             .withZoneSameInstant(date.zone)
