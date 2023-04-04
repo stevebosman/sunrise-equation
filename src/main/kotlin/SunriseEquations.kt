@@ -92,24 +92,28 @@ fun calculateRefinedSunriseSetUTC(
     var daylightType = DaylightType.NORMAL
     var estimate = calculateSunriseSetUTC(rise, julianMidnight, latitude, longitude)
     var i = 0
+    estimate = refineEstimate(estimate, rise, julianMidnight, i, latitude, longitude)
     if (estimate.isNaN()) {
         val doy = calculateDayOfYearFromJulianDay(julianMidnight)
         val increment: Int
-        if (((latitude.degrees > 66.4) && (doy > 79) && (doy < 267)) ||
-            ((latitude.degrees < -66.4) && ((doy < 83) || (doy > 263)))
-        ) {   //previous sunrise/next sunset
-            daylightType = DaylightType.MIDNIGHT_SUN
-            if (rise) { // find previous sunrise
-                increment = -1
-            } else { // find next sunset
-                increment = 1
+        val midnightSun = ((latitude.degrees > 66.4) && (doy > 79) && (doy < 267)) ||
+                ((latitude.degrees < -66.4) && ((doy < 83) || (doy > 263)))
+        daylightType = if (midnightSun) DaylightType.MIDNIGHT_SUN else DaylightType.POLAR_NIGHT
+        if (midnightSun) {
+            increment = if (rise) {
+                // find previous sunrise
+                -1
+            } else {
+                // find next sunset
+                1
             }
-        } else {   //previous sunset/next sunrise
-            daylightType = DaylightType.POLAR_NIGHT
-            if (rise) { // find previous sunrise
-                increment = -1
-            } else { // find next sunset
-                increment = 1
+        } else {
+            increment = if (rise) {
+                // find next sunrise
+                1
+            } else {
+                // find previous sunset
+                -1
             }
         }
         while (estimate.isNaN()) {
@@ -119,15 +123,27 @@ fun calculateRefinedSunriseSetUTC(
                 calculateSunriseSetUTC(rise, julianMidnight + i + estimate / MINUTES_PER_DAY, latitude, longitude)
         }
     }
-    var prevEstimate = estimate
+    return Pair((i * MINUTES_PER_DAY) + estimate, daylightType)
+}
+
+private fun refineEstimate(
+    estimate: Double,
+    rise: Boolean,
+    julianMidnight: Double,
+    i: Int,
+    latitude: Angle,
+    longitude: Angle
+): Double {
+    var estimate1 = estimate
+    var prevEstimate = estimate1
     for (j in 1..4) {
-        estimate = calculateSunriseSetUTC(rise, julianMidnight + i + estimate / MINUTES_PER_DAY, latitude, longitude)
-        if (isClose(estimate, prevEstimate, 1.0 / SECONDS_PER_DAY)) {
+        estimate1 = calculateSunriseSetUTC(rise, julianMidnight + i + estimate1 / MINUTES_PER_DAY, latitude, longitude)
+        if (isClose(estimate1, prevEstimate, 1.0 / SECONDS_PER_DAY)) {
             break
         }
-        prevEstimate = estimate
+        prevEstimate = estimate1
     }
-    return Pair((i * MINUTES_PER_DAY) + estimate, daylightType)
+    return estimate1
 }
 
 /**
@@ -374,6 +390,7 @@ fun calculateSunriseDetails(date: ZonedDateTime, longitude: Angle, latitude: Ang
     )
     return SunriseDetails(
         sunrise.second,
+        sunset.second,
         solarNoonTime,
         sunrise.first,
         sunset.first,
@@ -382,5 +399,5 @@ fun calculateSunriseDetails(date: ZonedDateTime, longitude: Angle, latitude: Ang
 }
 
 fun calculateMoonPhase(date: ZonedDateTime): Double {
-    return (calculateJulianDate(date)- 2451549.5)/ 29.53%1.0
+    return (calculateJulianDate(date) - 2451549.5) / 29.53 % 1.0
 }
